@@ -36,7 +36,6 @@ jobs:
         run: bundle install
 
       - name: Build Pages
-        shell: zsh
         run: |
           ./build-pages.sh
 
