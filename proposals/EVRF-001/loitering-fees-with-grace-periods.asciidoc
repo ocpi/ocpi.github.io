@@ -1,0 +1,181 @@
+= Loitering fees with grace periods for OCPI 2.3.0
+
+Date: 2026-03-05
+
+Author: Reinier Lamers
+
+Status: Proposal
+
+Extension Number: EVRF-001
+
+== Motivation
+
+Many Charge Point Operators (CPOs) have pricing schemes for charging at their stations that involve charging drivers more after the vehicle has finished drawing power from the charging station. Such higher charges for occupying a station without charging are known as "loitering fees" or "idle fees" among other terms.
+
+Many CPOs also allow the users of their charging station some extra time, after the vehicle has finished power, to go to the charging station, unplug their vehicle and move it away. This way, people can charge their vehicle battery fully without immediately incurring the higher charges when they take reasonable time to move their vehicle after charging has finished. We will call this allowance of some extra time a "grace period".
+
+OCPP 2.1.1 and 2.2.1 have allowed CPOs to publish Tariffs that describe pricing schemes with loitering fees. It is not possible however in OCPI 2.1.1 or 2.2.1 to describe a loitering fee with a grace period in a Tariff object. Because there are many CPOs currently charging loitering fees with grace periods, this means there is a gap between what the market needs and what OCPI offers.
+
+== Domain
+
+=== Use Cases
+
+==== UC1. As a _Driver_ want to _be able to unplug and move my vehicle after charging fully without incurring a loitering fee_ in order to _charge my vehicle at a reasonable cost and with peace of mind_.
+
+For drivers of electric vehicles, fully charging their battery at a charging station should be a natural part of their daily life. They don't want to face extra costs or stressful races to unplug quickly when they fill up their vehicle.
+
+==== UC2. As a _CPO_, I want to _charge extra for occupying a charging station without charging_ in order to _promote fair sharing of limited charging spaces, and maximize utilization of my charging stations_.
+
+Charging stations are a capital investment. To get a return on that investment, CPOs or charging stations owners want them to be used by customers consuming electricity. They want to discourage idle occupancy of charging stations by vehicles that are not charging, and charging extra for such idle occupancy is one way to discourage it.
+
+==== UC3. As a _Driver_, I want to _see how much it will cost to charge before I charge somwhere_ in order to _make an informed decision on where to charge, and not incur unexpected high costs_.
+
+Like anyone selling something, CPOs have to offer clarity about what the terms of a transaction are before a Driver enters into that transaction. If a CPO fails to provide a clear description of their pricing scheme, that will lead to a bad customer experience. If this happens at a large scale, it may lead to a distrust of the EV charging industry that can impede the electrification of personal vehicles.
+
+==== UC4. As an _MSP_, I want to _be informed of prices that apply only with a certain SoC_ in order to _present these prices correctly to my Drivers_.
+
+Some CPOs in North America have pricing structures that charge different rates depending on the State of Charge (SoC) of the vehicle that is charged. These pricing structures are an accomplished fact in the market at this point, and MSPs and NAPs need a way to learn about these tariffs.
+
+=== Inherent issues with loitering fees
+
+While they are commonly applied, there are some issues with charging loitering fees fairly and transparently that cannot be solved by OCPI on its own. These issues include:
+
+ * It is hard for a CPO to know precisely when energy transfer starts or ends. Especially with OCPP 1.6 and earlier OCPP versions, there is no reliable way to know when exactly charging ends or begins. Meanwhile, the starting point, endpoint and total energy consumption of a Charge Session are reliably captured by OCPP 1.6 charging stations.
+
+ * Even if the CPO knows when energy transfer stops, it is not always clear if this cessation of energy transfer is caused by the vehicle, by the charging station or by other circumstances in the local electrical system. If the cause is not in the vehicle, the CPO would be imposing surcharges on the Driver that the Driver cannot avoid. This is intransparent and unfair to the Driver and may also be a compliance risk for the CPO.
+
+ * Even if the CPO implements loitering fees correctly, with solutions to the problems above, then a Driver can work around the CPO's incentives by programming the car. The Driver can program the car to never let the charging power drop to zero, for example by making the car charge at full speed until the battery is 75% full and then making the car charge the last 25% as slow as possible, putting off the loitering fee as long as possible.
+
+ * It is unclear if and how a loitering fee would be applied if a vehicle repeatedly stops and resumes charging during one Session.
+
+For these reasons, the authors of this proposal believe that a CPO should consider other means of encouraging high utilization before deciding on a loitering fee. We believe that other incentives to consider include for example:
+
+ * Charging a higher rate per hour after a certain duration of the Charging Session, regardless of when charging ends. This is a less precise tool than a loitering fee, but it is easier to understand for Drivers and easier to enforce for CPOs.
+
+ * Announcing maximum EVSE occupation durations with signage and letting on-site staff enforce this.
+
+ * Designing the site layout to encourage quick turnaround. This is how fuel stations seem to get by without loitering fees nor signs setting maximum occupation durations.
+
+=== Use of the extension
+
+==== Use of the extension in OCPI 3.0
+
+In OCPI 3.0, support for loitering fees is already part of the base protocol. This extension is not needed for OCPI 3.0.
+
+==== Use of the extension in OCPI 2.3.0
+
+We backport OCPI 3.0's support of loitering fees with grace periods to OCPI 2.3.0. We do this by adding the `min_duration_not_requesting_power` and `max_duration_not_requesting_power` fields, which are familiar from OCPI 3.0, to OCPI 2.3.0's TariffRestrictions class type.
+
+The `vehicle_requesting_power` field of OCPI 3.0's Dimensions class type is also backported to OCPI 3.0. It is added to the ChargingPeriod class type, as OCPI 2.3.0 does not have a separate Dimensions type.
+
+The `vehicle_requesting_power` field has to be added in OCPI 2.3.0 even while OCPI 2.3.0 already has a distinction between PARKING_TIME and TIME as separate dimensions. This is due to PARKING_TIME being defined as any time during which no power is consumed by the vehicle, including time during which the vehicle requests power but the charging station is requesting the vehicle to not charge. Loitering fees, however, only apply when the vehicle is not drawing power while the charging station is offering it.
+
+We also backport the `min_soc` and `max_soc` fields of the TariffRestrictions type, which are also familiar from OCPI 3.0.
+
+===== New enum values
+
+No new enum values are added.
+
+===== New object fields
+
+====== ChargingPeriod _class_
+
+[cols="3,2,1,10",options="header"]
+|===
+|Property |Type |Card. |Description
+|vehicle_requesting_power | boolean | ? | Whether the vehicle is requesting power from the EVSE during this ChargingPeriod. That is, `false` if the vehicle is not requesting power and `true` if the vehicle is requesting power. This is used to enable loitering fees. If a Platform that advertises support for the `loitering` feature does not provide this field in a ChargingPeriod, that means that either the vehicle was requesting power, or it is not relevant for pricing whether the vehicle was requesting power.
+|===
+
+====== TariffRestrictions _class_
+
+
+[cols="3,2,1,10",options="header"]
+|===
+|Property |Type |Card. |Description
+|min_duration_not_requesting_power | int | ? | Minimum duration in seconds that the vehicle must have not been requesting power (as indicated by the `vehicle_rquesting_power` field of the ChargingPeriod type).
+|max_duration_not_requesting_power | int | ? | Maximum duration in seconds that the vehicle must have not been requesting power (as indicated by the `vehicle_requesting_power` field of the ChargingPeriod type).
+|min_soc | int | ? | Minimum state of charge of the vehicle, as a percentage. That is, this restriction property matches when the vehicle is charged to exactly this percentage or in excess of it.
+|max_soc | int | ? | Maximum state of charge of the vehicle, as a percentage. That is, this restriction property matches when the vehicle is charged to less than this percentage.
+|===
+
+===== New HTTP endpoints
+
+No new HTTP endpoints are added.
+
+===== New Types
+
+No new types are added.
+
+===== Extension discovery in OCPI 2.3.0
+
+Platforms that support this feature across all the Parties that they host SHOULD include a key `"loitering"` with value `{}` in the object under the `"features"` key in their version details responses.
+
+Platforms where some but not all hosted Parties support this feature SHOULD include a key `"loitering"` with value `{}` in the object under the `"features"` key in the CredentialsRole objects for supporting Parties.
+
+Using this explicit advertising of support, it is possible to see which consumers of Tariffs, Sessions and CDRs support the feature, even when they do not send any Client-Owned Objects that use the feature's extensions.
+
+====== Dealing with non-supporting consumers
+
+When a consumer of Tariffs, Sessions and/or CDRs does not support this feature, it is impossible to give a fully accurate description of the sender's pricing to this consumer.
+
+Receivers that do not support the extension will misinterpret the Tariffs with `min_duration_not_requesting_power` and `max_duration_not_requesting_power` conditions that they receive as describing a loitering fee without a grace period, rather than as describing a loitering fee with a grace period. In the intended scenario where a `min_duration_not_requesting_power` restriction is used in a `PriceComponent` that prices the `PARKING_TIME` dimension, this will mean that the CPO will end up charging less than the MSP and Driver would have expected based on the MSP's interpretation of the Tariff.
+
+===== Examples
+
+A tariff that charges $0.50 per kWh, and starts charging a loitering fee of $10 per hour after the first hour of not charging, will look like:
+
+```json
+{
+   "country_code": "CA",
+   "party_id": "SWT",
+   "id": "21",
+   "currency": "CAD",
+   "elements": [{
+     "price_components": [{
+       "type": "ENERGY",
+       "price": 0.50,
+       "step_size": 1
+     }]
+   }, {
+     "price_components": [{
+       "type": "PARKING_TIME",
+       "price": 10.00,
+       "step_size": 1
+     }],
+     "restrictions": {
+      "min_duration_not_requesting_power": 3600
+     }
+  }],
+  "tax_included": "NO",
+  "last_updated": "2026-03-01T17:00:43Z"
+}
+```
+
+The following example shows a tariff that charges $18.00 per hour if the SoC is under 80%, and $40.00 per hour if it is over:
+
+```json
+{
+   "country_code": "CA",
+   "party_id": "CHB",
+   "id": "b1c641ff-d8f8-43c5-a058-6909f96043bf",
+   "currency": "CAD",
+   "elements": [{
+     "price_components": [{
+       "type": "TIME",
+       "price": 40.00,
+       "step_size": 1
+     }],
+     "restrictions": {
+      "min_soc": 80
+     }
+   }, {
+     "price_components": [{
+       "type": "TIME",
+       "price": 18.00,
+       "step_size": 1
+     }]
+  }],
+  "tax_included": "NO",
+  "last_updated": "2026-03-01T17:00:43Z"
+}
+```

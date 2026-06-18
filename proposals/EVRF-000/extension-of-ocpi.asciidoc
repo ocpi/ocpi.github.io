@@ -1,0 +1,474 @@
+= Processes for Feature Development for OCPI
+
+Date: 2026-05-28
+
+Author: Reinier Lamers
+
+Status: Draft
+
+== Motivation
+
+The EV charging industry is slow to adopt new releases of its own communication protocols. As of December 2025, most charging stations use OCPP 1.6, which was released in 2015, to communicate with their management system. Thereby they forego the improvements provided by OCPP 2.0.1 (released in 2020) and OCPP 2.1 (released in 2025). Where different EV charging operators and providers communicate among each other, they typically use OCPI 2.1.1 (released in 2017), foregoing the improvements provided by OCPI 2.2.1 (released in 2021) or OCPI 2.3.0 (released in 2025).
+
+This lag in adoption of new standards means that protocols created by standardization committees today will only come into use some five years later, if at all. It means that EV charging operators and providers have to work with tools that are at least five years old while they are addressing new, urgent challenges in the industry. Among the mounting challenges that will be impossible to solve without implementing newer standards are increasing cybersecurity awareness, a push for transparent charging pricing, and the increasing adoption of electric vehicles by heavy-duty fleet operators.
+
+This whitepaper aims to speed up adoption of improved versions of OCPI by describing how improvements can be introduced to OCPI without creating the barriers to adoption that plagued earlier versions of OCPI and OCPP. The paper aims to work towards a future in which OCPI implementers can easily add new capabilities to their systems without breaking interoperability with existing partners.
+[MB: it will not be a white paper, but a process from EVRF how we deal with extensions and how other can propose it]
+
+In this future, OCPI will be both backward compatible and forward compatible. OCPI being backward compatible means that OCPI Platforms developed to support a newer version of OCPI can process output from OCPI Platforms conforming to older versions of OCPI. OCPI being forward compatible means that OCPI Platforms developed to support an older version of OCPI can process output from OCPI Platforms conforming to newer versions of OCPI.
+
+== Domain
+
+=== Terminology
+
+This document uses the terms "extension" and "feature". By "extension" we mean a set of requirements that is used in combination with, but is not itself part of, the requirements of a certain OCPI version. By "feature", we mean a set of functionalities that is additional to the set of functionalities already supported by a certain OCPI version. This means that a feature is a set of functionalities that can be supported by OCPI by making extensions.
+
+[MB: This is not clear to me. Also not sure if we need to make a difference between features and extensions as there are always very grey lines I think when would be a feature or when an extension. Unless it is extremely clear and there are no grey areas. Maybe also good to give concrete examples if we use different terminology.]
+
+=== Use Cases
+[Would turn it around - first the situation with UCs and then technology and add some additional text as intro. Proposal: In principle OCPI should support certain functions and business requirements described in Business and Functional Use Cases. However, sometimes there is a technology push, where certain technology is introduced and later the concrete use cases. The EVRoaming Foundation and OCPI support both, although the most favourable one is tarting from a certain business requirement. Exceptions are for example: smart charging, where technology was added to OCPI that can support all kind of future use cases, or the addition of a new connector. 
+The two different situations are described below.]
+
+==== Use Case 1: As an OCPI Platform, I want to support new technologies not foreseen in existing OCPI versions
+
+New products, services and technologies keep appearing at a steady pace. When this happens, it should be possible for OCPI Platforms to refer to these new technologies in data they exchange via OCPI, without needing to upgrade to an incompatible version of OCPI.
+
+An example of this happening in practice would be the appearance of the Megawatt Charging System (MCS) and SAE J-3400 (NACS) connector types. Another imaginable scenario that falls in this category would be the launch of a new on-site payment system besides the existing ones of Visa, MasterCard etc.
+
+==== Use Case 2: As an OCPI Platform, I want to support new use cases for my stakeholders not foreseen in existing OCPI versions
+
+Sometimes new capabilities in OCPI are needed because OCPI implementers realize that there is a previously unrecognized use case in the EV charging industry that has to be urgently addressed. Examples of this would be the requirement to provide accessible charging facilities, or the need of heavy-duty fleet operators to book charging times and energy delivery in advance.
+[MB: Don't think this is 'sometimes', would change that in "In most situations", as this should be the normal situation. Even with a new connector you could see it as a business requirement. And as EVRF we want parties to think about the UCs to prevent that technology is added that will not be used]
+
+
+==== Use Case 3: As the EV Roaming Foundation, we want to help OCPI Platforms work around protocol flaws in existing OCPI versions
+
+It happens that after a version of OCPI is released, the OCPI community realizes that the release fails to support important functionality. In the past, this has led to releases being de facto retracted (like OCPI versions 2.1 and 2.2, and OCPP version 2.0). In other cases, the flaws go unaddressed for years, as happens with OCPI 2.2.1's failure to support loitering fees with grace periods. If it is possible to add functionality to OCPI without breaking compatibility, such oversights can be dealt with much more swiftly and gently.
+
+==== Use Case 4: As an OCPI Platform, I want to know which OCPI features my counterparty supports, so that I can enable these features if they are supported and also remain compatible if they are not supported
+
+[MB: think this is not a similar sitiuation (or UC as the ones above. This is a separate chapter/paragraph explaining the need to know on technical level, but maybe also on business level(!) which extension are supported by the other party.]
+
+It is important for Platforms to know what their partner Platforms support. This allows them to show the right set of controls to their users, and to assign the correct semantics to data that they receive from their partner Platforms.
+
+=== Extension points
+
+As of OCPI version 2.3.0, OCPI has become extensible. By this, we mean that implementers are explicitly allowed by the specification to add new elements to OCPI messages, if they have a need that is not addressed by the existing specification.
+
+OCPI 3.0 offers implementers the following extension points:
+
+ * Open Enumerations
+
+ * JSON object fields
+
+ * Party-Issued Object Types
+
+ * RPC endpoints
+
+ * Types
+
+OCPI 2.3.0 offers implementers the following extension points:
+
+ * Open Enumerations
+
+ * JSON object fields
+
+ * HTTP endpoints
+
+ * Types
+
+When a feature uses only these extension points, the feature can be implemented while preserving compatibility with Platforms that do not implement the feature.
+
+We will now describe every extension point in more detail.
+
+==== Open enumerations
+
+OCPI, since version 2.3.0, has different types for _open_ and _closed_ enumerations. The type for open enumerations is called OpenEnum; the type for closed enumerations is called enum.
+
+Open enumerations are extension points where new values can be added to adapt to new realities. For example, when a new plug standard appears, a new value can be added to the ConnectorType OpenEnum.
+
+==== JSON Object fields
+
+OCPI uses the JSON (<<refJSON,[JSON]>>) data format. JSON is designed for extensibility. Unlike other data exchange formats, JSON allows new fields to be added to message formats without requiring changes to systems that process messages of that format. That means that systems processing JSON messages are typically forward compatible, and new fields can be added easily in JSON-based message formats.
+
+In the EV charging industry however, OCPP has tried to constrain this freedom that JSON provides by providing restrictive JSON Schema files for OCPP that consider OCPP messages invalid when they contain fields not foreseen in the OCPP specification.
+
+With OCPI versions 2.3.0 and 3.0, OCPI is choosing a different direction. We believe that the forward compatibility that JSON encourages can be a great help in easier transitions to new protocol versions.
+
+Adding new fields to JSON messages is a familiar and well-understood way to extend data formats for most developers nowadays. We therefore encourage people looking to extend OCPI to try to do it with just adding JSON fields before considering the more invasive extension points listed below.
+
+==== Party-Issued Objects
+
+OCPI, starting with version 3.0, specifies a generic mechanism for transferring data objects like Locations, Tariffs and CDRs. This generic mechanism is called the Party Issued Object system.
+
+It is possible to extend OCPI by adding new object types that can be transferred using the Party Issued Object system. When adding a new Party Issued Object type, the party adding it must add requirements like those of the "Exchange information" use cases in the OCPI 3.0 specification. These requirements must specify:
+
+  * An object type definition for the objects to be transferred, and
+  * A string to use as the final path segment in party issued object update requests.
+
+==== RPC endpoints
+
+OCPI, starting with version 3.0, contains a generic mechanism for making Remote Procedure Calls (RPCs). The generic RPC mechanism is used when a party requests an operation from another party, like starting a charging session on an EVSE or authorizing a charge token for charging.
+
+OCPI users can extend OCPI 3.0 by adding RPC endpoints for operations not previously supported by OCPI. To do so, they must provide requirements like those of the "Operations" use cases in the OCPI 3.0 specification. For each new RPC endpoint, the requirements must state:
+
+  * Whether the RPC is synchronous or asynchronous, and
+
+  * What the HTTP request verb is to be used (always POST for asynchronous RCPs)
+
+  * The operation name that is used in the endpoint URL path, and
+
+  * The object type of objects that can be sent in the requests to this endpoint, and
+
+  * The object type of objects that can be sent in the (synchronous or asynchronous) responses to this operation.
+
+==== Types
+
+It is possible to extend OCPI by adding entirely new data types, complementing those that are defined in the "Fundamental data type definitions" section of the OCPI Functional Use Cases document.
+
+To do so, the extender must provide:
+
+ * A description of the possible values of the type, and
+
+ * A description of how values of the type are represented in JSON.
+
+==== HTTP endpoints
+
+In OCPI versions prior to OCPI 3.0, the Party Issued Object and RPC mechanisms did not exist. Equivalent extensions can be made by describing entirely new HTTP endpoints. When doing so, an extender must describe all properties of these endpoints, including but not necessarily limited to:
+
+ * What the URL to the endpoint is
+
+ * What HTTP request verb should be used
+
+ * What should be in the request payload
+
+ * What should be in the response payload
+
+ * Which query parameters should be added to the URL
+
+=== Invariants
+
+Real invariants in OCPI 3.0 are:
+
+   * OCPI messages are encoded as HTTP messages with bodies in the JSON format.
+
+   * OCPI messages are encrypted and authenticated with TLS.
+
+   * If a Party Issued Object changes, its version number changes as well.
+
+   * A Party Issued Object that was received from another Platform can only be changed by the same Party on the same Platform that initially sent it.
+
+==== Pseudo-invariants
+
+Pseudo-invariants are things that are true for many or all current implementations, but that are not in fact invariants of the OCPI protocol. Implementations may encounter OCPI messages or partner Platforms that do not adhere to these statements in the future.
+
+Pseudo-invariants of OCPI 3.0 are:
+
+   * Only types defined in the base specification are used in OCPI messages.
+
+   * The root JSON value in OCPI messages is always an object.
+
+   * OCPI types are never union types.
+
+   * There is at most one Hub or other middlebox on the path between two Platforms communicating via a Hub.
+
+=== Hubs and other "middleboxes"
+
+"Middlebox" is a term used in IETF RFCs describing protocol evolution. Middleboxes are defined in <<refRFC3234,[RFC3234]>> as any intermediary device performing functions other than the normal, standard functions of an IP router on the datagram path between a source host and destination host.
+
+Roaming Hubs and other multi-party OCPI Platforms can be considered middleboxes in that they receive data via OCPI from one Party, and then forward that data via OCPI to another Party, typically while performing value-added functions like message routing, caching and enriching.
+
+When Parties communicate through Hubs, a degree cooperation of the Hub is necessary for two Parties to use OCPI extensions in the communication among them. As such, Hubs that fail to support OCPI extensions can hold back the adoption of these extensions among Parties using OCPI.
+
+Therefore, it is important that this paper puts requirements on Hubs to pass through fields and messages related to extensions, to make it unambiguous whether and how extensions can be used in OCPI communication that goes through one or more Hubs.
+
+Roaming Hubs and other OCPI middleboxes have the following requirements to take into account when forwarding messages and data to and from OCPI connections that differ in their versions or their sets of supported extensions.
+
+==== Requirements for middleboxes handling open enumerations
+
+The principle here is that a middlebox may apply special logic for open enumeration values that it recognizes, but must pass on values that it does not recognize as-is. The following two requirements formalize that.
+
+When a middlebox receives an OpenEnum value that it does not recognize, it MUST pass on the message with this value, and include the value  unaltered in forwarded messages to all connected systems to which the data or message containing the value would be forwarded if the value was one that the middlebox recognizes.
+
+When a middlebox receives an OpenEnum value that is not in the base specification but that the middlebox does recognize, it MAY transform the message in a way that makes the message more likely to be acted upon appropriately by the Platform to which the message is forwarded.
+
+[[requirements_for_middleboxes_handling_json_object_fields]]
+==== Requirements for middleboxes handling JSON object fields
+
+OCPI and this whitepaper place no specific requirements on how Hubs and other middleboxes handle fields that are not in the OCPI specification and that they do not recognize.
+
+==== Requirements for middleboxes handling Party Issued Objects
+
+OCPI and this whitepaper place no specific requirements on how Hubs and other middleboxes handle Party Issued Object types that are not in the OCPI specification and that they do not recognize.
+
+
+==== Requirements for middleboxes handling RPC endpoints
+
+Because of the security risks of forwarding arbitary request verbs to arbitrary URL paths, we recommend OCPI middleboxes to not forward unrecognized Remote Procedure Calls.
+
+When an OCPI Platform receives an HTTP request with a combination of request verb and URL path that it does not recognize, even if the request fits the OCPI specification's requirements for Remote Procedure Calls, the Platform SHOULD reject these requests with the appropriate HTTP status codes in the 4xx range.
+
+==== Requirements for middleboxes handling types
+
+As a middlebox Platform knows the type for all the fields that it recognizes, the middlebox Platform can only encounter extended types that it does not recognize in JSON fields that it also does not recognize.
+
+In such cases, OCPI and this whitepaper [MB: make it "document" or "process", it is much more than a white paper] put no requirements on how the Hub or other middlebox handles the unrecognized datatype in the unrecognized field, as specified under <<requirements_for_middleboxes_handling_json_object_fields,Requirements for middleboxes handling JSON object fields>>.
+
+==== Requirements for middleboxes handling HTTP endpoints
+
+Middlebox Platforms SHOULD NOT forward requests to unrecognized endpoints. There are too many degrees of freedom for such requests. Forwarding them would be insecure.
+
+=== The Feature Development Process
+[MB: I should put this part above the technical description. Or in a separate document where they are refering to each other. One document would be my preference. First you want to know the process and then how you can do it technically.]
+
+==== Rationale
+
+The goal of extensibility, and feature development, is to allow OCPI Platforms that have new capabilities to be interoperable with Platforms that do not have these capabilities. In order to achive that goal, we must acknowledge that extensibility also brings risks for interoperability, and we must put processes in place to make sure that extensibility works for interoperability, not against it.
+
+[MB should change this in: 
+The goal of extensibility, and feature development, is to support new certain new or changed business requirements via  OCPI Platforms that have new capabilities AND to be interoperable with Platforms that do not have these capabilities. 
+The EVRoaming Foundation offers the OCPI protocol free to download and use by everyone. That also requires that the Intelectual Property (IP) of the procol and the extensions is at EVRoaming Foundation. 
+
+=== IP of extensions
+In case extensions are not fully (from scratch) made by any workgroup of the EVRoaming Foundation, but are based on either complete offered functionality from a company or offered as component/part of functionality by a company, a document is required where parties clearly agree that IP is handed over to EVRF. This does not mean that the concerned company cannot use it anymore themselved, but they are not allowed to claim IP or ask money for usage when used as part of products from the EVRoaming Foundation. The document of handing over IP, can be requested via: operations@evroaming.org]
+
+In order to achive that goal for interoperability, we must acknowledge that extensibility also brings risks for interoperability, and we must put processes in place to make sure that extensibility works for interoperability, not against it.
+
+The risks for interoperability that extensibility brings are:
+
+ * Interoperability risks: Extensions negate the "integrate once, connect anywhere" promise of a standard. They necessitate synchronized, bilateral implementation between parties, which is rarely scalable across a large network.
+
+
+ * Ecosystem fragmentation: Heavy reliance on extensions fractures the ecosystem.  If multiple integrations require unique, non-standard fields to function, OCPI effectively ceases to be a unified standard.
+
+
+ * Maintenance burden: Extensions introduce significant technical debt. They are outside the scope of official compliance testing and may increase the efforts of migrating to future OCPI versions.
+
+To safeguard against these risks, we design a process on the following principles:
+
+ * Features are developed by the EV Roaming Foundation's OCPI Development Working Group. All of the EV Roaming Foundation's Contributors can influence the content of the feature specification before the feature is accepted by the OCPI Development Working Group. Without a consensus in the OCPI Development Working Group, a feature will not be endorsed by the EV Roaming Foundation.
+
+ * The requirements of the base specification cannot be altered by a feature extension. Extensions are extensions after all, not modifications.
+
+ * The ultimate goal of feature development is to make the feature part of a future release of the OCPI base specification. When features are included in the OCPI base specification, they also become subject to compliance testing.
+
+The desired outcome of applying these principles is that feature development becomes a way to allow evolution of a unified OCPI specification without breaking interoperability or fragmenting the technical ecosystem.
+
+==== Process rules
+
+To maintain order and quality when numerous OCPI features are developed in parallel, the EV Roaming Foundation will set up processes and document repositories to develop and disseminate feature documents.
+
+Once a feature document is submitted to the EV Roaming Foundation, the EV Roaming Foundation will assign the feature a number for clear identification. The feature document will then enter into a lifecycle with the following possible stages:
+
+ * **proposal**: the EV Roaming Foundation acknowledges that the document was submitted, but has no stance on its merit yet.
+
+ * **draft**: the EV Roaming Foundation accepts that the proposal fulfills a business use case. During this phase, EV Roaming Foundation Contributors can propose edits and offer comments. 
+[MB: Add: This review is not only done by OCPI development group, but also by other persons from contributors with a more Business and Functional knowledge.] 
+
+ * **under review**: the EV Roaming Foundation proposes to its Contributors to make the document an EV Roaming Foundation approved specification for use by OCPI platforms, and solicits comments from its Contributors and the general public.
+
+ * **rejected**: the document was found by the EV Roaming Foundation's Contributors to not provide a reasonable solution to a business use case. Adherence to the document's requirements is recommended against by the EV Roaming Foundation, and the document is available for historical information only.
+
+ * **accepted**: EVRF endorses the document as a specification of how to solve a certain use case.
+
+ * **incorporated**: the feature described in the document has been included in a new version of the base OCPI specification. OCPI implementers should consult the new base specification rather than the feature document.
+
+ * **obsolete**: the document used to be endorsed by the EV Roaming Foundation, but since then, better ways to solve the same use cases have become available. The EV Roaming Foundation no longer endorses the document.
+
+The lifecycle and its stages can be turned into a state diagram as follows:
+
+image::OCPI Extension Lifecycle.png[]
+
+===== Feature lifecycle transitions
+
+The EV Roaming Foundation's OCPI Development Working Group decides if and when a feature document transitions to a certain stage.
+[MB: remove "OCPI Development Working Group" as it can e.g. also be the HDV group who decides on the busines and functional UCs for HDV. It is not automatically the OCPI dev group]. 
+[MB: Add: "In the situation when it is not a technology push, but with Use Case, which should be the normal situation, the business and functional persons from the Contributors decide to move to the next phase, which can be - in case UCs are approved - to hand over to the OCPI development group."]
+
+When deciding if a feature can progress to the next lifecycle stage, the OCPI Development Working Group should consider the following general criteria:
+
+  * Whether the feature addresses business use cases that are encountered by parties in the market, and documents these business use cases.
+
+  * Whether the feature can be combined with other known features without conflicts or harmful interference of functionalities.
+
+  * Whether the feature is truly backward and forward compatible. This involves checking not only whether the feature is using only intended extension points, but also whether receiving systems still assign the right meaning to messages they receive in case only one of the sender and the receiver supports the feature.
+
+  * Whether there is a sufficient audience for the feature. At least, there should be three parties committing to implement the feature. Ideally, there should be two separate connections, with four different parties that are committing to implementing the feature before it becomes accepted.
+
+  * No hostile manoeuvres. That is, the feature must not disadvantage an identifiable minority of OCPI users.
+
+Specific criteria to check for on certain transitions:
+
+ * **proposal** to **rejected**: this should happen when there is no business use case that fulfills the above general criteria.
+
+ * **proposal** to **draft**: this should happen when a feature is proposed and there does seem to be a business use case fulfilling the above general criteria.
+
+ * **draft** to **under review**: this should happen when the EV Roaming Foundation Full Contributors working on the proposal have reached a stable draft that they feel is complete, but the proposal has not been reviewed by Associate Contributors or the general public yet. At this point the Development Working Group has to decide whether the proposal is to be reviewed by only Associate Contributors, or by the general public.
+
+ * **under review** to **rejected**: this should happen when only wider review by Associate Contributors and/or the general public reveals that the proposal does not fulfill the above general criteria. This is a hopefully rare unhappy transition, because if the proposal is so deficient, this should have become apparent in an earlier lifecycle stage.
+
+ * **under review** to **incorporated**: this should happen when the comments from a wider review by Associate Contributors and/or the general public have been taken into account, and a stable draft has been reached after that, and the feature is considered by the Development Working Group to be so fundamental that incorporating it into the core specification is clearer than keeping it as a separate paper in "accepted" state.
+
+ * **under review** to **accepted**: this should happen when the comments from a wider review by Associate Contributors and/or the general public have been taken into account, and a stable draft has been reached after that, but the feature is not considered by the Development Working Group to be so fundamental that incorporating it into the core specification is clearer than keeping it as a separate paper in "accepted" state.
+
+ * **accepted** to **incorporated**: this should happen when a feature proposal that was previously in "accepted" state has become so widely adopted and relied upon that the Development Working Group believes that it is better for it to become incorporated in the core specification.
+
+ * **accepted** to **obsolete**: this should happen when a feature proposal that was previously in "accepted" state has, in the view of the Development Working Group, been superseded by newer ways of dealing with the business use case.
+
+While the OCPI Development Working Group has the authority over lifecycle transitions, the day-to-day work on feature proposals can be done in other venues like task groups, and these other venues can recommend the OCPI Development Working Group to transition the feature proposal.
+
+===== Process tools and visibility
+
+The EV Roaming Foundation will make available a repository with all feature documents that have ever been submitted to the EV Roaming Foundation.
+
+This repository will also contain a template document containing all the sections that an feature document must contain:
+
+ * A domain section with use cases that are addressed by the feature described in the document,
+
+ * A section on if and how the feature can be used with OCPI 2.3.0, and
+
+ * A section on if and how the feature can be used with OCPI 3.0.
+
+==== Incompatible changes
+
+There are scenarios in which it is the right course of action to make changes to OCPI that are not backward or forward compatible. Examples could be changing the transport from HTTP to another protocol, or changing the data format from JSON to something else.
+
+In many cases, even changes at that level can be done in a backward and forward compatible way, by always starting the connection process in a way that conforms to the existing specification, and only deviating from the existing specification once both platforms have indicated support for the new feature to each other.
+
+In some cases, such a bootstrapping process that conforms to the existing specification may not be possible or worthwhile. When that happens, an incompatible new version of OCPI can be developed. The process described in this paper does not cover that situation. When the OCPI Development Working Group decides that such an incompatible new version is to be developed, the process for doing so must be developed ad hoc, as it was for OCPI 2.x and for OCPI 3.0.
+
+== Feature discovery
+
+For some features, it will be useful for Platforms to announce in advance that they support those features. If a feature adds a new RPC endpoint, for example, a Platform may prefer to learn about the presence of that feature without having to probe for it by firing a request to the endpoint. This section describes how Platforms can announce the features they support to other Platforms, and how these other Platforms can recognize them.
+
+=== Feature discovery in OCPI 3.0
+
+To show how to detect whether a feature is supported by a Platform, or by a Party on a Platform, the feature document for that feature SHOULD contain a "How to detect support in OCPI 3.0" section.
+
+For many features, support can probably simply be detected from the presence of certain fields or open enumeration values. These features do not require explicit announcement.
+
+Fatures that require explicit announcement are to be announced differently dependending of whether they're supported across the whole Platform, or only for certain Parties on the Platform.
+
+==== Discovering features supported across the whole Platform
+
+If the feature needs announcement and is supported across all Parties on the Platform, support for the feature SHOULD be announced in an "features" field in the OCPIVersionURL, OcpiConnectionRequest and OcpiConnectionResponse objects sent by the Platform.
+
+The value of this field should be a key-value map, represented as a JSON object. The keys are strings, and each key identifies a supported feature. The values in the map can give extra information required by the receiving Platform to use this feature effectively with the sending Platform. As an example, we could imagine that a future `OcpiConnectionRequest` with an "features" field could look like this:
+
+```json
+{
+  "version": "3.0",
+  "request_timeout": 15000,
+  "base_url": "https://example.com/ocpi",
+  "features": {
+    "send_charging_station_display_logo": {},
+    "message_encryption": {
+      "algorithm": "ECC_GCM_AES256",
+      "public_key": "1rFIyJTkTWAHdjxoWnYdQg=="
+    }
+  }
+}
+```
+
+This would indicate that the Platform supports a hypothetical feature to send a logo to be displayed on a charger's screen identified by `"send_charging_station_display_logo"`. It also indicates that the Platform supports a hypothetical feature for encrypting messages between Platforms at the OCPI layer, identified by `"message_encryption"`, and configured with a crypto algorithm and a public key.
+
+If a feature requires explicit announcement at the Platform level, its feature documents SHOULD specify in its "How to detect support in OCPI 3.0" section:
+
+  * what the key is that identifies the feature
+
+  * what possible values are under that key in the key-value map.
+
+If the feature has to be announced but can be used without exchanging parameters between the Platforms, the value in the key-value map should be specified to be an empty object, that is `{}`.
+
+==== Discovering features supported only for specific Parties
+
+If the feature needs announcement and is supported only for certain Parties on the Platform, support for the feature SHOULD be announced in an "features" field in the Party object in the PlatformInformation object.
+
+This field follows the same format, and has the same rules applying to it, as the "features" field described above for features supported across the whole Platform. The only difference is that if an feature is listed in the "features" field in a Party object, that indicates only support for the feature for that specific Party.
+
+==== Versioning
+
+From OCPI 3.0 onward, OCPI releases will have version identifiers with two numbers, separated by a dot ('.'). An increment of the first number means a change that breaks backward compatibility. An increment of the second number means that changes were made, but backward compatibility is preserved. That is, Platforms that support different versions that differ only in the second number can connect and interoperate despite interpreting the messages they receive using different versions of the OCPI specification. Platforms that support only different versions that differ in their first number are not interoperable.
+
+This approach is informed by, but not the same as, Semantic Version (<<refSEMVER,[SEMVER]>>). Semantic Versioning is a specification for versioning software dependencies, and is not applicable to specification documents like OCPI.
+
+=== Extensibility discovery and negotiation in OCPI 2.3.0
+
+To show how to detect whether an feature is supported by a Platform, or by a Party on a Platform, the feature document for that feature SHOULD contain a "How to detect support in OCPI 2.3.0" section.
+
+For many features, support can probably simply be detected from the presence of certain fields or open enumeration values. These features do not require explicit announcement.
+
+Features that require explicit announcement are to be announced differently dependending of whether they're supported across the whole Platform, or only for certain Parties on the Platform.
+
+==== Discovering and negotiating features supported across the whole Platform
+
+If the feature needs announcement and is supported across all Parties on the Platform, support for the feature SHOULD be announced in an "features" field in the response body to the version details endpoint.
+
+The value of this field should be a key-value map, represented as a JSON object. The keys are strings, and each key identifies a supported feature. The values in the map can give extra information required by the receiving Platform to use this feature effectively with the sending Platform. As an example, we could imagine that a future response to a version details endpoint with an "features" field could look like this:
+
+```json
+{
+  "version": "2.3.0",
+  "endpoints": [...hidden for brevity...],
+  "features": {
+    "send_charging_station_display_logo": {},
+    "message_encryption": {
+      "algorithm": "ECC_GCM_AES256",
+      "public_key": "1rFIyJTkTWAHdjxoWnYdQg=="
+    }
+  }
+}
+```
+
+This would indicate that the Platform suports a hypothetical feature to send a logo to be displayed on a charger's screen identified by `"send_charging_station_display_logo"`. It also indicates that the Platform supports a hypothetical feature for encrypting messages between Platforms at the OCPI layer, identified by `"message_encryption"`, and configured with a crypto algorithm and a public key.
+
+If a feature requires explicit announcement at the Platform level, its feature documents SHOULD specify in its "How to detect support in OCPI 2.3.0" section:
+
+  * what the key is that identifies the feature
+
+  * what possible values are under that key in the key-value map.
+
+If the feature has to be announced but can be used without exchanging parameters between the Platforms, the value in the key-value map should be specified to be an empty object, that is `{}`.
+
+==== Discovering and negotiating features supported only for specific Parties
+
+If the feature needs announcement and is supported only for certain Parties on the Platform, support for the feature SHOULD be announced in an "features" field in the CredentialsRole object in the Credentials object.
+
+This field follows the same format, and has the same rules applying to it, as the "features" field described above for features supported across the whole Platform. The only difference is that if an feature is listed in the "features" field in a CredentialsRole object, that indicates only support for the feature for that specific Party in that specific role.
+
+==== Versioning
+
+In the OCPI 2.x version family, versioning has not been consistent. Platforms SHOULD NOT assume that there is any backward compatibility between different versions in the 2.x family.
+
+== Actions to be taken by the OCPI editors to foster the feature development process
+
+ - Establish a cadence of yearly backward compatible releases, with a release cutoff deadline at a fixed date of the year. All features that the OCPI Development Working Group has transitioned to "accepted" and deemed fit for incorporation by the deadline date shall be included in that year's scheduled release.
+
+ - Structure the OCPI Development Working Group around the different features that are worked on. In the beginning of the call, an overview of the features under development, their lifecycle stages and any imminent or recent lifecycle transitions should be provided.
+
+ - Provide an overview of all past and present feature proposals and their lifecycle stages online.
+
+ - Start hosting the OCPI Development Working Group under the feature development process described in this paper from Autumn 2026 onward.
+
+== Actions to be recommended by the OCPI Development Working Group to the EV Roaming Foundation Board to foster the feature development process
+
+  - Amend the Contributor Agreement to encourage Contributors to contribute their custom OCPI extensions as feature proposals to the OCPI development process.
+
+  - Amend the Contributor Agreement to make it clear that to all material that a Contributor supplies under the Feature Proposal process, the same intellectual property rules apply as to material offered in the OCPI Development Working Group call. The goal here is that the OCPI specification and all feature proposal documents remain available to read and implement free of charge.
+
+== Actions to be recommended by the OCPI Development Working Group to the EV Roaming Foundation Advisory Board to foster the feature development process
+
+
+  - Provide a clearer definition and operationalization of consensus, as it applies to decision-making the OCPI Development Working Group.
+
+
+== References
+
+[cols="1,3,3"]
+|===
+| Abbreviation             | Title                                | URL
+|[[refJSON]] JSON          | The JSON data interchange syntax     | https://ecma-international.org/publications-and-standards/standards/ecma-404/
+|[[refRFC3234]] RFC3234    | Middleboxes: Taxonomy and Issues     | https://datatracker.ietf.org/doc/html/rfc3234
+|[[refRFC6709]] RFC6709    | Design Considerations for Extensions | https://datatracker.ietf.org/doc/html/rfc6709
+|[[refSEMVER]] SEMVER      | Semantic Versioning 2.0.0            | https://semver.org/spec/v2.0.0.html
+|===

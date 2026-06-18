@@ -28,11 +28,22 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
+      
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+
+      - name: Install Asciidoctor
+        run: bundle install
+
+      - name: Build Pages
+        shell: zsh
+        run: |
+          ./build-pages.sh
 
       - name: Upload artificact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: 'pages-out'
 
       - name: Deploy to Github Pages
         id: deployment
