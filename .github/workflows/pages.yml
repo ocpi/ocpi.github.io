@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Pages
         run: |
-          ./build-pages.sh
+          ./build-pages.rb
 
       - name: Upload artificact
         uses: actions/upload-pages-artifact@v3

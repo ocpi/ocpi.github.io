@@ -2,7 +2,7 @@ require "fileutils"
 require "minitest/autorun"
 require "tmpdir"
 
-load File.expand_path("../build-pages.sh", __dir__)
+load File.expand_path("../build-pages.rb", __dir__)
 
 class BuildPagesTest < Minitest::Test
   def test_extract_proposal_reads_metadata_from_asciidoc
