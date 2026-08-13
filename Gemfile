@@ -16,3 +16,7 @@ gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]
 
 # Needed for local `jekyll serve` on Ruby 3+
 gem "webrick", "~> 1.8"
+
+group :test do
+  gem "minitest", "~> 5.25"
+end
