@@ -30,7 +30,9 @@ class ProposalsHomepageTest < Minitest::Test
     assert_includes index, "Date:"
 
     # filename "-" must not render a Filename line for proposal 0001
-    refute_match(/0001[\s\S]*?Filename:/, index)
+    proposal_0001 = index[/<li class="proposal-row">\s*<div class="proposal-number">0001<\/div>.*?<\/li>/m]
+    refute_nil proposal_0001, "expected proposal 0001 in homepage HTML"
+    refute_includes proposal_0001, "Filename:"
 
     # proposals without date show an em dash
     assert_includes index, "Date: —"
