@@ -1,11 +1,19 @@
-# Proposals of new features in OCPI.
+# OCPI Feature Proposals
 
-This repository aims to:
+This repository tracks feature proposals for OCPI:
 
- * Keep track of which feature proposals for OCPI have been proposed to the EV Roaming Foundation,
+* Assigns proposal numbers
+* Stores proposal metadata in `_data/proposals.yaml`
+* Publishes a public list on GitHub Pages
 
- * Assign numbers to these proposals,
+## Editing the list
 
- * Store the latest documentation for these proposals, and
+1. Edit `_data/proposals.yaml`.
+2. Preview locally (optional):
 
- * Render to Github Pages a publicly viewable list of the proposals and their status.
+   ```bash
+   bundle install
+   bundle exec jekyll serve
+   ```
+
+   Open http://127.0.0.1:4000/
