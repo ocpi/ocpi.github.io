@@ -1,11 +1,33 @@
-# Proposals of new features in OCPI.
+# OCPI Feature Proposals
 
-This repository aims to:
+This repository tracks feature proposals for OCPI:
 
- * Keep track of which feature proposals for OCPI have been proposed to the EV Roaming Foundation,
+* Assigns proposal numbers
+* Stores proposal metadata in `_data/proposals.yaml`
+* Publishes a public list on GitHub Pages
 
- * Assign numbers to these proposals,
+## Editing the list
 
- * Store the latest documentation for these proposals, and
+1. Edit `_data/proposals.yaml`.
+2. Preview locally (optional):
 
- * Render to Github Pages a publicly viewable list of the proposals and their status.
+   ```bash
+   bundle install
+   bundle exec jekyll serve
+   ```
+
+   Open http://127.0.0.1:4000/
+3. Commit and push to `main`. GitHub Pages’ built-in Jekyll builder regenerates the site.
+
+## GitHub Pages settings
+
+In the repository **Settings → Pages**:
+
+* Source: **Deploy from a branch**
+* Branch: **main** / **/ (root)**
+
+Do **not** select “GitHub Actions” as the Pages source for this site.
+
+## Proposal documents
+
+AsciiDoc sources may live under `proposals/`. Linking those documents from the homepage is not wired up yet; the `filename` field is shown as plain text when present.
