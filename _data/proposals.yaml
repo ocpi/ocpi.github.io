@@ -21,19 +21,20 @@ proposals:
     title: Accessibility Extension
     author: Ben van Gameren
     status: Accepted
-    date: 2026
+    date: 2026-09-01
     filename: accessibility-extension.asciidoc
   - number: "004"
     title: OCPI Data Exchange for National Access Points under AFIR
     author: Ben van Gameren
     status: Under Review
     filename: afir_extension.asciidoc
+    date: 2026-08-06
   - number: "006"
-    title: Autocharge Whitepaper
+    title: Autocharge Roaming with OPRF
     author: Hakan Ebabil, Adão Viana Pinto
     status: Draft
-    filename: "-"
-    date: 2026
+    filename: Autocharge_Roaming_with_OPRF_v0.2.pdf
+    date: 2026-04-13
   - number: "007"
     title: Invoice Reconciliation for OCPI 2.3.0
     author: Ben van Gameren
