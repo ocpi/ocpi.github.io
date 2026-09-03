@@ -2,14 +2,14 @@ proposals:
   - number: "000"
     title: Processes for Feature Development for OCPI
     author: Reinier Lamers
-    status: Draft
+    status: Under Review
     date: 2026-08-06
-    filename: extension-of-ocpi.pdf
+    filename: extension-of-ocpi.asciidoc
   - number: "001"
     title: OCPI Discount Offer
     author: Hakan Ebabil, Matthew Penny
     status: Draft
-    date: 2026
+    date: 2026-08-27
     filename: "OCPI Discount Offer Extension.docx"
   - number: "002"
     title: Bookings
@@ -22,12 +22,12 @@ proposals:
     author: Ben van Gameren
     status: Accepted
     date: 2026
-    filename: "-"
+    filename: accessibility-extension.asciidoc
   - number: "004"
     title: OCPI Data Exchange for National Access Points under AFIR
     author: Ben van Gameren
     status: Under Review
-    filename: nap-extension-1.0-RC2.pdf
+    filename: afir_extension.asciidoc
   - number: "006"
     title: Autocharge Whitepaper
     author: Hakan Ebabil, Adão Viana Pinto
