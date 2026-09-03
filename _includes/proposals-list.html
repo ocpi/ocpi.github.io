@@ -27,7 +27,7 @@
         </div>
         {% assign fname = proposal.filename | strip %}
         {% if fname and fname != "" and fname != "-" %}
-          <div class="proposal-filename">Filename: {{ fname | escape }}</div>
+          <div class="proposal-filename">Filename: <a href="https://github.com/ocpi/extensions/blob/main/EVRF-{{ proposal.number }}/{{ fname | url_encode | replace: '+', '%20' }}">{{ fname | escape }}</a></div>
         {% endif %}
       </div>
     </li>
