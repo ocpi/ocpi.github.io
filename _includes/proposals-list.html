@@ -1,6 +1,15 @@
 {% assign sorted_proposals = site.data.proposals.proposals | sort: "number" %}
 <style>
-  .proposals-list { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+  .proposals-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0;
+    color: #666;
+    font-size: 0.95rem;
+  }
+  .proposals-controls input { margin: 0; }
+  .proposals-list { list-style: none; padding: 0; margin: 0.75rem 0 0; }
   .proposal-row {
     display: grid;
     grid-template-columns: 4.5rem 1fr;
@@ -12,11 +21,29 @@
   .proposal-title { font-weight: 600; margin: 0 0 0.25rem; }
   .proposal-meta, .proposal-filename { color: #666; font-size: 0.95rem; }
   .proposal-filename { margin-top: 0.15rem; }
+  .proposal-status-heading {
+    list-style: none;
+    margin: 1.25rem 0 0.25rem;
+    padding: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.35rem;
+  }
+  .proposal-status-heading:first-child { margin-top: 0.5rem; }
 </style>
 
-<ul class="proposals-list">
+<div class="proposals-controls">
+  <label>
+    <input type="checkbox" id="group-by-status" />
+    Group by status
+  </label>
+</div>
+
+<ul class="proposals-list" id="proposals-list">
   {% for proposal in sorted_proposals %}
-    <li class="proposal-row">
+    <li class="proposal-row" data-status="{{ proposal.status | escape }}">
       <div class="proposal-number">{{ proposal.number }}</div>
       <div class="proposal-detail">
         <div class="proposal-title">{{ proposal.title | escape }}</div>
@@ -33,3 +60,64 @@
     </li>
   {% endfor %}
 </ul>
+
+<script>
+(function () {
+  var STATUS_ORDER = ["Draft", "Proposed", "Under Review", "Accepted"];
+  var list = document.getElementById("proposals-list");
+  var toggle = document.getElementById("group-by-status");
+  if (!list || !toggle) return;
+
+  var flatOrder = Array.prototype.slice.call(list.querySelectorAll(".proposal-row"));
+
+  function statusRank(status) {
+    var i = STATUS_ORDER.indexOf(status);
+    return i === -1 ? STATUS_ORDER.length : i;
+  }
+
+  function clearHeadings() {
+    Array.prototype.slice.call(list.querySelectorAll(".proposal-status-heading")).forEach(function (el) {
+      el.parentNode.removeChild(el);
+    });
+  }
+
+  function renderFlat() {
+    clearHeadings();
+    flatOrder.forEach(function (row) {
+      list.appendChild(row);
+    });
+  }
+
+  function renderGrouped() {
+    clearHeadings();
+    var groups = {};
+    flatOrder.forEach(function (row) {
+      var status = row.getAttribute("data-status") || "Unknown";
+      if (!groups[status]) groups[status] = [];
+      groups[status].push(row);
+    });
+
+    var statuses = Object.keys(groups).sort(function (a, b) {
+      var ra = statusRank(a);
+      var rb = statusRank(b);
+      if (ra !== rb) return ra - rb;
+      return a.localeCompare(b);
+    });
+
+    statuses.forEach(function (status) {
+      var heading = document.createElement("li");
+      heading.className = "proposal-status-heading";
+      heading.textContent = status;
+      list.appendChild(heading);
+      groups[status].forEach(function (row) {
+        list.appendChild(row);
+      });
+    });
+  }
+
+  toggle.addEventListener("change", function () {
+    if (toggle.checked) renderGrouped();
+    else renderFlat();
+  });
+})();
+</script>
