@@ -6,11 +6,11 @@ proposals:
     date: 2026-08-06
     filename: extension-of-ocpi.pdf
   - number: "001"
-    title: "..."
-    author: Philipp Fischbacher
-    status: Accepted
-    date: 2025
-    filename: "-"
+    title: OCPI Discount Offer
+    author: Hakan Ebabil, Matthew Penny
+    status: Draft
+    date: 2026
+    filename: "OCPI Discount Offer Extension.docx"
   - number: "002"
     title: Bookings
     author: Michel Bayings, Boudewijn Groeneboer
@@ -18,9 +18,9 @@ proposals:
     date: 2025
     filename: "-"
   - number: "003"
-    title: OCPI Discount Offer
-    author: Hakan Ebabil, Matthew Penny
-    status: Draft
+    title: Accessibility Extension
+    author: Ben van Gameren
+    status: Accepted
     date: 2026
     filename: "-"
   - number: "004"
@@ -28,12 +28,6 @@ proposals:
     author: Ben van Gameren
     status: Under Review
     filename: nap-extension-1.0-RC2.pdf
-  - number: "005"
-    title: Accessibility Extension
-    author: Ben van Gameren
-    status: Accepted
-    date: 2026
-    filename: "-"
   - number: "006"
     title: Autocharge Whitepaper
     author: Hakan Ebabil, Adão Viana Pinto
