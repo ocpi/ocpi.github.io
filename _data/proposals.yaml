@@ -45,7 +45,7 @@ proposals:
     title: OCPI Connector Status Extension Proposal
     author: Jens Andersson
     status: Proposed
-    filename: "-"
+    filename: extension-proposal_20260827.asciidoc
     date: 2026
   - number: "009"
     title: "..."
@@ -58,4 +58,4 @@ proposals:
     author: Reinier Lamers
     status: Draft
     date: 2026
-    filename: loitering-fees-with-grace-periods.pdf
+    filename: loitering-fees-with-grace-periods.asciidoc
