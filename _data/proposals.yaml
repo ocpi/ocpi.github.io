@@ -46,16 +46,16 @@ proposals:
     author: Jens Andersson
     status: Proposed
     filename: extension-proposal_20260827.asciidoc
-    date: 2026
+    date: 2026-08-27
   - number: "009"
     title: Power and State of Charge Fields
     author: Greg Fitzpatrick
     status: Under Review
     filename: "power-and-soc-fields.asciidoc"
-    date: 2026
+    date: 2026-07-20
   - number: "010"
     title: Loitering Fees with Grace Periods
     author: Reinier Lamers
     status: Draft
-    date: 2026
+    date: 2026-03-05
     filename: loitering-fees-with-grace-periods.asciidoc
