@@ -45,8 +45,8 @@ proposals:
     title: OCPI Connector Status Extension Proposal
     author: Jens Andersson
     status: Proposed
-    filename: extension-proposal_20260827.asciidoc
-    date: 2026-08-27
+    filename: extension-proposal_20260909.asciidoc
+    date: 2026-09-09
   - number: "009"
     title: Power and State of Charge Fields
     author: Greg Fitzpatrick
