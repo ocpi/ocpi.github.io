@@ -2,8 +2,8 @@ proposals:
   - number: "000"
     title: Processes for Extension Development for OCPI
     author: Reinier Lamers
-    status: Under Review
-    date: 2026-08-06
+    status: Accepted
+    date: 2026-09-09
     filename: extension-of-ocpi.asciidoc
   - number: "001"
     title: OCPI Discount Offer
