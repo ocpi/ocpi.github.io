@@ -1,8 +1,7 @@
-# OCPI Feature Proposals
+# OCPI Standard Extension overview page
 
-This repository tracks feature proposals for OCPI:
+This repository generates a Github Pages view of standard extensions proposals for OCPI:
 
-* Assigns proposal numbers
 * Stores proposal metadata in `_data/proposals.yaml`
 * Publishes a public list on GitHub Pages
 
