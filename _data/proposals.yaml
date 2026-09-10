@@ -44,7 +44,7 @@ proposals:
   - number: "008"
     title: OCPI Connector Status Extension Proposal
     author: Jens Andersson
-    status: Proposed
+    status: Draft
     filename: extension-proposal_20260909.asciidoc
     date: 2026-09-09
   - number: "009"
