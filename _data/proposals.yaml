@@ -35,12 +35,6 @@ proposals:
     status: Draft
     filename: Autocharge_Roaming_with_OPRF_v0.2.pdf
     date: 2026-04-13
-  - number: "007"
-    title: Invoice Reconciliation for OCPI 2.3.0
-    author: Ben van Gameren
-    status: Accepted
-    filename: "-"
-    date: 2026
   - number: "008"
     title: Detailed connector status for improved user feedback
     author: Jens Andersson
