@@ -42,7 +42,7 @@ proposals:
     filename: "-"
     date: 2026
   - number: "008"
-    title: OCPI Connector Status Extension Proposal
+    title: Detailed connector status for improved user feedback
     author: Jens Andersson
     status: Draft
     filename: extension-proposal.asciidoc
