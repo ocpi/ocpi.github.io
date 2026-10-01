@@ -53,7 +53,9 @@
           · Date: {% if proposal.date and proposal.date != "" %}{{ proposal.date | escape }}{% else %}—{% endif %}
         </div>
         {% assign fname = proposal.filename | strip %}
-        {% if fname and fname != "" and fname != "-" %}
+        {% if proposal.pdf_url %}
+          <div class="proposal-filename">PDF: <a href="{{ proposal.pdf_url | relative_url }}">{{ proposal.pdf_url | split: '/' | last | escape }}</a></div>
+        {% elsif fname and fname != "" and fname != "-" %}
           <div class="proposal-filename">Filename: <a href="https://github.com/ocpi/extensions/blob/main/EVRF-{{ proposal.number }}/{{ fname | url_encode | replace: '+', '%20' }}">{{ fname | escape }}</a></div>
         {% endif %}
       </div>

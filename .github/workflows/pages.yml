@@ -1,0 +1,83 @@
+# Build the site, including the PDFs and metadata of the AsciiDoc proposals in
+# ocpi/extensions, and deploy it to GitHub Pages.
+#
+# Needs an EXTENSIONS_READ_TOKEN secret: a fine-grained token with
+# "Contents: read" on ocpi/extensions, which is private.
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  # Sent by ocpi/extensions on every push to its main branch.
+  repository_dispatch:
+    types: [extensions-updated]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out ocpi/extensions
+        uses: actions/checkout@v4
+        with:
+          repository: ocpi/extensions
+          path: _extensions
+          token: ${{ secrets.EXTENSIONS_READ_TOKEN }}
+
+      # Toolchain of the extensions build: Ruby (asciidoctor-pdf), Node (schema
+      # appendices), Java and Graphviz (PlantUML diagrams).
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: _extensions
+          bundler-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: _extensions/common/open_api/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install Graphviz
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
+      - name: Build extension PDFs
+        working-directory: _extensions
+        run: |
+          (cd common/open_api && npm ci)
+          make
+
+      # Set up the site's own Ruby last, so it comes first on the PATH.
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - uses: actions/configure-pages@v5
+        id: pages
+      - name: Build site
+        env:
+          JEKYLL_ENV: production
+          EXTENSIONS_DIR: _extensions
+        run: bundle exec jekyll build --baseurl "${{ steps.pages.outputs.base_path }}"
+      - uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
