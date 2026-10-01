@@ -27,8 +27,14 @@ url: "" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: jekyllrb
 github_username:  jekyll
 
+# Checkout of the ocpi/extensions repository that proposal metadata and PDFs
+# are read from. The EXTENSIONS_DIR environment variable overrides this.
+extensions_dir: _extensions
+
 # Build settings
 theme: minima
+sass:
+  style: compact
 plugins:
   - jekyll-feed
 
