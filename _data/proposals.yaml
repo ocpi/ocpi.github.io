@@ -1,7 +1,11 @@
-# Fallback metadata for proposals that are not written in AsciiDoc.
-# Proposals in AsciiDoc are listed from the header attributes of their document
-# in ocpi/extensions instead (see _plugins/extension_proposals.rb).
+# Proposal metadata. For proposals written in AsciiDoc, the metadata and PDF
+# come from the Makefile of their folder in ocpi/extensions (see
+# _plugins/extension_proposals.rb); this file only supplies what that Makefile
+# does not set, and the metadata of proposals not written in AsciiDoc.
 proposals:
+  - number: "000"
+    title: Processes for Extension Development for OCPI
+    date: 2026-09-10
   - number: "001"
     title: OCPI Discount Offer
     author: Hakan Ebabil, Matthew Penny
@@ -20,3 +24,9 @@ proposals:
     status: Draft
     filename: Autocharge_Roaming_with_OPRF_v0.2.pdf
     date: 2026-04-13
+  - number: "008"
+    title: Detailed connector status for improved user feedback
+    date: 2026-09-25
+  - number: "009"
+    title: Power and State of Charge Fields
+    date: 2026-09-25

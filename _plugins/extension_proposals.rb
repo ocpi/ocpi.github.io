@@ -1,43 +1,57 @@
-require "asciidoctor"
-
 # Proposal metadata from a checkout of the ocpi/extensions repository.
 #
-# A proposal's master AsciiDoc document lives in its EVRF-NNN folder and
-# carries the metadata as header attributes:
+# A proposal written in AsciiDoc has a Makefile in its EVRF-NNN folder that
+# carries the metadata of its document:
 #
-#     = Loitering fees with grace periods
-#     :evrf-number: 010
-#     :author: Reinier Lamers
-#     :revdate: 2026-03-05
-#     :evrf-status: Draft
+#     NAME     := loitering-fees-with-grace-periods
+#     VERSION  := PROPOSAL
+#     TITLE    := Loitering fees with grace periods for OCPI 2.3.0
+#     SUBTITLE :=
+#     DATE     := 2026-03-05
+#     AUTHOR   := Reinier Lamers
+#     STATUS   := Proposal
+#     include ../common/extension.mk
 #
-# Documents without :evrf-number: (included chapters) are skipped. Documents
-# using the formal layout have no "= Title" line; their :ocpi_document: is the
-# title instead.
+# The number comes from the folder name. TITLE and DATE are optional, so
+# _data/proposals.yaml supplies whatever the Makefile leaves out.
 module ExtensionProposals
+  ASSIGNMENT = /\A([A-Za-z][\w-]*)\s*[:?]?=\s*(.*?)\s*\z/
+
   def self.read(extensions_dir)
-    Dir.glob(File.join(extensions_dir, "EVRF-*", "*.asciidoc")).sort.filter_map do |path|
-      # :secure leaves include directives unresolved, which the header does not need.
-      doc = Asciidoctor.load_file(path, parse_header_only: true, safe: :secure)
-      number = doc.attr("evrf-number")
-      next unless number
+    Dir.glob(File.join(extensions_dir, "EVRF-*", "Makefile")).sort.filter_map do |path|
+      vars = makefile_variables(path)
+      name = vars["NAME"]
+      next unless name
 
       {
-        "number" => number,
-        "title" => doc.doctitle(sanitize: true) || doc.attr("ocpi_document"),
-        "author" => doc.attr("author"),
-        "status" => doc.attr("evrf-status"),
-        "date" => doc.attr("revdate"),
-        "filename" => File.basename(path),
-        # Where the extensions build (make) puts the PDF of this document.
-        "pdf_source" => File.join(extensions_dir, "out", "#{File.basename(path, '.asciidoc')}.pdf"),
-      }
+        "number" => File.basename(File.dirname(path)).delete_prefix("EVRF-"),
+        "title" => vars["TITLE"],
+        "date" => vars["DATE"],
+        "author" => vars["AUTHOR"],
+        "status" => vars["STATUS"],
+        "filename" => "#{name}.asciidoc",
+        # Where common/extension.mk (make pdf) puts the PDF of this document.
+        "pdf_source" => File.join(extensions_dir, "out", "#{name}-#{vars['VERSION']}.pdf"),
+      }.reject { |_, value| value.nil? || value.empty? }
     end
   end
 
-  # Proposals read from AsciiDoc replace fallback entries with the same number.
-  def self.merge(asciidoc_proposals, fallback_proposals)
-    numbers = asciidoc_proposals.map { |p| p["number"] }
-    fallback_proposals.reject { |p| numbers.include?(p["number"].to_s) } + asciidoc_proposals
+  # The simple variable assignments (NAME := value) in a Makefile.
+  def self.makefile_variables(path)
+    File.readlines(path, chomp: true).each_with_object({}) do |line, vars|
+      match = ASSIGNMENT.match(line)
+      vars[match[1]] = match[2] if match
+    end
+  end
+
+  # Fields read from ocpi/extensions override those of the fallback entry with
+  # the same number.
+  def self.merge(extension_proposals, fallback_proposals)
+    by_number = extension_proposals.to_h { |p| [p["number"], p] }
+    merged = fallback_proposals.map do |fallback|
+      extension = by_number.delete(fallback["number"].to_s)
+      extension ? fallback.merge(extension) : fallback
+    end
+    merged + by_number.values
   end
 end

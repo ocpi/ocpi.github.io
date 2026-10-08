@@ -14,8 +14,8 @@ module ExtensionProposals
   end
 
   # Merges the AsciiDoc proposals into site.data.proposals.proposals, with
-  # _data/proposals.yaml as the fallback for proposals not written in AsciiDoc,
-  # and publishes their PDFs. The checkout is found via the EXTENSIONS_DIR
+  # _data/proposals.yaml supplying the metadata their Makefiles do not have and
+  # the proposals not written in AsciiDoc, and publishes their PDFs. The checkout is found via the EXTENSIONS_DIR
   # environment variable or the extensions_dir setting in _config.yml.
   class Generator < Jekyll::Generator
     priority :high
