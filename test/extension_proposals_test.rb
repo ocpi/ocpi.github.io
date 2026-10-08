@@ -18,55 +18,62 @@ class ExtensionProposalsTest < Minitest::Test
     File.write(full, content)
   end
 
-  def test_reads_header_attributes
-    write("EVRF-010/loitering.asciidoc", <<~ADOC)
-      = Loitering `fees`
-      :evrf-number: 010
-      :author: Hakan Ebabil, Matthew Penny
-      :revdate: 2026-03-05
-      :evrf-status: Draft
+  def test_reads_makefile_metadata
+    write("EVRF-004/Makefile", <<~MAKE)
+      NAME     \t\t:= nap-extension
+      VERSION  \t\t:= 1.0
+      TITLE    \t\t:= NAP Data Extension
+      SUBTITLE \t\t:= OCPI Data Exchange for National Access Points under AFIR
+      DATE     \t\t:= 2026-09-24
+      EVRF-NUMBER \t:= EVRF-004
+      AUTHOR   \t\t:= Ben van Gameren, Tim Ververs
+      STATUS   \t\t:= Under Review
 
-      Date: {revdate}
-    ADOC
+      include ../common/extension.mk
+    MAKE
 
     assert_equal [{
-      "number" => "010",
-      "title" => "Loitering fees",
-      "author" => "Hakan Ebabil, Matthew Penny",
-      "status" => "Draft",
-      "date" => "2026-03-05",
-      "filename" => "loitering.asciidoc",
-      "pdf_source" => File.join(@dir, "out", "loitering.pdf"),
+      "number" => "004",
+      "title" => "NAP Data Extension",
+      "date" => "2026-09-24",
+      "author" => "Ben van Gameren, Tim Ververs",
+      "status" => "Under Review",
+      "filename" => "nap-extension.asciidoc",
+      "pdf_source" => File.join(@dir, "out", "nap-extension-1.0.pdf"),
     }], ExtensionProposals.read(@dir)
   end
 
-  def test_formal_layout_uses_ocpi_document_as_title
-    write("EVRF-003/accessibility.asciidoc", <<~ADOC)
-      :ocpi_document: Accessibility Extension
-      :document_date: 2026-09-01
-      :evrf-number: 003
-      :revdate: {document_date}
+  def test_leaves_out_unset_metadata
+    write("EVRF-008/Makefile", "NAME := connector-status\nVERSION := DRAFT\nSUBTITLE :=\n\ninclude ../common/extension.mk\n")
 
-      include::../common/extension_layout.asciidoc[]
-    ADOC
-
-    proposal = ExtensionProposals.read(@dir).first
-    assert_equal "Accessibility Extension", proposal["title"]
-    assert_equal "2026-09-01", proposal["date"]
+    assert_equal [{
+      "number" => "008",
+      "filename" => "connector-status.asciidoc",
+      "pdf_source" => File.join(@dir, "out", "connector-status-DRAFT.pdf"),
+    }], ExtensionProposals.read(@dir)
   end
 
-  def test_skips_documents_without_number
-    write("EVRF-003/domain.asciidoc", "== Domain\n")
-    write("extension-document-template.asciidoc", "= Template\n:evrf-number: NNN\n")
+  def test_skips_folders_without_makefile
+    write("EVRF-001/Discount Offer.pdf", "")
+    write("common/extension.mk", "NAME ?=\n")
 
     assert_empty ExtensionProposals.read(@dir)
   end
 
-  def test_asciidoc_replaces_fallback_with_same_number
-    asciidoc = [{ "number" => "010", "title" => "From AsciiDoc" }]
-    fallback = [{ "number" => "010", "title" => "From YAML" }, { "number" => "001", "title" => "PDF only" }]
+  def test_makefile_metadata_overrides_fallback_with_same_number
+    extension = [
+      { "number" => "010", "title" => "From Makefile" },
+      { "number" => "011", "title" => "Makefile only" },
+    ]
+    fallback = [
+      { "number" => "010", "title" => "From YAML", "status" => "Draft" },
+      { "number" => "001", "title" => "PDF only" },
+    ]
 
-    assert_equal [{ "number" => "001", "title" => "PDF only" }, { "number" => "010", "title" => "From AsciiDoc" }],
-                 ExtensionProposals.merge(asciidoc, fallback)
+    assert_equal [
+      { "number" => "010", "title" => "From Makefile", "status" => "Draft" },
+      { "number" => "001", "title" => "PDF only" },
+      { "number" => "011", "title" => "Makefile only" },
+    ], ExtensionProposals.merge(extension, fallback)
   end
 end

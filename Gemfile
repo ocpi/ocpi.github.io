@@ -20,10 +20,6 @@ end
 gem "wdm", "~> 0.1", :platforms => [:mingw, :x64_mingw, :mswin]
 gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]
 
-# Reads proposal metadata from the AsciiDoc documents in ocpi/extensions
-# (see _plugins/extension_proposals.rb).
-gem "asciidoctor", "~> 2.0"
-
 # Needed for local `jekyll serve` on Ruby 3+
 gem "webrick", "~> 1.8"
 
